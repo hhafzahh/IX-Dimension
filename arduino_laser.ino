@@ -1,121 +1,187 @@
 #include "NewPing.h"
 
+unsigned int distance6;
 unsigned int distance2;
 unsigned int irReading;
-int v_in = 0;
-int v_out = 0;
-
-bool motionDetected = false; // Flag to keep track of motion detection
-bool buttonPressed = false; // later program with a physical button
+unsigned long startTime;
+bool mazeActivated = false;
+bool motionDetected = false;
+bool buttonPressed = false;
 bool wall2Activated = false;
-unsigned long startTime; 
-const int TRIG = 4;
-const int ECHO = 15;
-const int MAX_DIST = 100;
-const int Laser1 = 12; //entrance wall
-const int Laser2 = 13; //second grid wall2
-const int Laser3 = 27; //second grid wall3 
-const int irsensor = 14;//entrance ir sensor
-const int pushBtn = 5;
-const int ledpin = 22;
+bool wall6Activated = false;
+bool wall7Activated = false;
+bool wall5Activated = false;
+bool wall1Activated = false;//not sure if need 
+bool countdown_over = false;
+bool irdetected = false;
 
-NewPing sonar(TRIG, ECHO, MAX_DIST);//second grid motion sensor
+
+//declaring constant variables
+//US 2,5,6,7 (only using 2 ultrasonic for now)
+const int trig_six = 4;
+const int echo_six = 15;
+const int trig_two = 18;
+const int echo_two = 19;
+const int max_dist = 100;
+const int laser1 = 12;
+const int laser2 = 13;
+const int laser5 = 26;
+const int laser6 = 25;
+const int laser6_1 = 33;
+const int laser6_2 = 32;
+const int laser7 = 27;
+const int irSensor = 14;
+const int pushBtn = 5;
+const int ledPin = 22;
+//lcd display might need 2 pins (21&22 based on reserach)
+
+//declare ultrasonic 
+NewPing sonar6(trig_six,echo_six, max_dist);
+NewPing sonar2(trig_two,echo_two,30);
+
 
 void setup() {
   Serial.begin(115200);
-  pinMode(TRIG, OUTPUT); 
-  pinMode(ECHO, INPUT);  
+  pinMode(trig_six, OUTPUT); 
+  pinMode(echo_six, INPUT);  
   pinMode(pushBtn, INPUT);
-  pinMode(ledpin, OUTPUT);
-  pinMode(Laser1, OUTPUT);
-  pinMode(Laser2, OUTPUT);
-  pinMode(Laser3,OUTPUT);
-  pinMode(irsensor, INPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(laser1, OUTPUT);
+  pinMode(laser2, OUTPUT);
+  pinMode(irSensor, INPUT);
+  pinMode(laser5, OUTPUT);
+  pinMode(laser6, OUTPUT);
+  pinMode(laser7, OUTPUT);
+  pinMode(laser6_1, OUTPUT);
+  pinMode(laser6_2, OUTPUT);
 }
 
 void loop() {
   delay(50);
   int push_btn_state = digitalRead(pushBtn);
-  irReading = digitalRead(irsensor);
-  distance2 = sonar.ping_cm();
+  irReading = digitalRead(irSensor);
+  distance6 = sonar6.ping_cm();
+  distance2 = sonar2.ping_cm();
   //Serial.println(distance2);
-  
-  if (irReading == LOW) {
-    v_in++; // Increment the count of people entering
-      
-    if (v_in - v_out == 1) { //entrance wall closed
-      Serial.println("Motion Detected");
-      motionDetected = true;
-      Serial.print("Number of Visitors Going In: ");
-      Serial.println(v_in);
-      trapWall1();
-      trapWall2();
-      
-    } else {
-      // Otherwise, deny entry and reset motion detection
-      Serial.println("Sensor is just playing with u!");
-      v_in--; // Decrement the count since entry is denied
-      motionDetected = false;
-    }
- }
-  
-  
-    if (v_in == 1 && buttonPressed == false){
-     digitalWrite(ledpin, HIGH);
-     //buttonPressed == true;
-    }else{
-     digitalWrite(ledpin, LOW);
-    }
 
-  
-  // if condition checks if push button is pressed
-  // if pressed LED will turn on otherwise remain off 
-  if (push_btn_state == HIGH) {
-    digitalWrite(ledpin, HIGH);
-  } else {
-    digitalWrite(ledpin, LOW);
+  if (irReading == LOW){
+    Serial.println("Motion Detected, Visitors entered the maze");
+    mazeActivated = true;
+    irdetected = true;
+   }
+
+   if (mazeActivated == true){
+      if (distance6 > 0 && wall6Activated == false && irdetected == true) {
+        //wall 6 should be open!
+        
+        Serial.println("Countdown of 10s have started");
+        startCountdown();
+        if (countdown_over = true){
+          Serial.println("It is now safe to close off the wall");
+          trapGrid6();
+          wall6Activated = true;
+          Serial.println("All walls of grid 6 is closed!");
+        }
+        
+      }
+
+      if (distance2 > 0 && wall2Activated == false && irdetected == true){
+        //wall2 should be open!
+        Serial.println("Countdown of 10s have started");
+        startCountdown();
+        if (countdown_over = true){
+          Serial.println("It is now safe to close off the wall");
+          digitalWrite(laser2,HIGH);
+          wall2Activated = true;
+          Serial.println("All walls of grid 2 is closed!");
+        }  
+      }
+
+     if (push_btn_state == HIGH) {
+          digitalWrite(ledPin, HIGH);
+     } 
+     else {
+      digitalWrite(ledPin, LOW);
+      buttonPressed = true; 
+     }
+
+     if (wall6Activated == true && buttonPressed == true){
+        Serial.println("User successfully finished the mini game");
+        Serial.println("Grid 6 Deactivated, You can now enter either wall 5 or 7!");
+        releaseWall5();
+        releaseWall7();
+        wall6Activated = false;
+        Serial.println("Countdown of 10s have started");
+        startCountdown();
+        if (countdown_over = true){
+          Serial.println("It is now safe to close off the wall");
+          trapGrid6();
+          wall6Activated = true;
+          buttonPressed = false;
+          Serial.println("All walls of grid 6 is closed!");
+          //wall6 to be opened to allow new users to enter
+          releaseWall6();
+          releaseWall2();
+          irdetected = false;
+          
+        }
+      }
     
-  }
+    
+    
+    }
 
-  if (digitalRead(ledpin) == LOW && v_in == 1){
-    Serial.println("User successfully finished the mini game");
-    buttonPressed = true;
+}
+
+void startCountdown() {
+  // Start the countdown from 10 to 1
+  for (int i = 10; i >= 1; i--) {
+    // Display the current count (optional)
+    Serial.println(i);
+
+    // Blink the LED for each second
+    digitalWrite(ledPin, HIGH); 
+    delay(500);                    
+    digitalWrite(ledPin, LOW);   
+    delay(500);                   
+
+    // set countdown_over boolean val = true
+    if (i == 1) {
+      countdown_over = true;
+    }
   }
+}
+
+
+void trapGrid6(){
+  digitalWrite(laser1,HIGH);
+  digitalWrite(laser6,HIGH);
+  digitalWrite(laser5,HIGH);
+  digitalWrite(laser6_1,HIGH);
+  digitalWrite(laser6_2,HIGH);
+  digitalWrite(laser7,HIGH);
+  wall6Activated = true;
   
- if (distance2 != 0 && v_in == 1 && buttonPressed == true) {
-    Serial.println("User entered second grid! Distance: ");
-    Serial.print(distance2);
-    Serial.println("cm");
-    v_out = 1; // Only increment v_out if someone is inside
-    Serial.print("Number of Visitors Going Out: ");
-    Serial.println(v_out);
-    buttonPressed = false;
-  }
-  
-  if ((v_in == 1) && (v_in - v_out == 0)){
-    Serial.println("The visitor entered have left the grid, a new user can now come in!! ");
-    v_in = 0;
-    v_out = 0;
-    motionDetected = false;
-    releaseWall1();
-  }
 }
 
-void trapWall1() {
-  digitalWrite(Laser1, HIGH);
-  Serial.println("Laser1 Switched On");
+void releaseWall5(){
+  digitalWrite(laser5,LOW);
+  Serial.println("Wall 5 is released"); 
 }
 
-void trapWall2() {
-  digitalWrite(Laser2, HIGH);
-  wall2Activated = true; // Set wall 2 activation flag to true
-  Serial.println("Laser2 Switched On");
+void releaseWall7(){
+  digitalWrite(laser7,LOW);
+  Serial.println("Wall 7 is released");  
 }
 
-void releaseWall2() {
-  digitalWrite(Laser2, LOW); // Turn off lasers for wall 2
+void releaseWall6(){
+  digitalWrite(laser6_1, LOW);
+  Serial.println("Wall 6 is released");
+  wall6Activated = false;
 }
 
-void releaseWall1() {
-  digitalWrite(Laser1, LOW); // Turn off lasers for wall 1
+void releaseWall2(){
+  digitalWrite(laser2, LOW);
+  Serial.println("Wall 2 is released");
+  wall2Activated = false;
 }
