@@ -20,8 +20,8 @@ bool irdetected = false;
 //US 2,5,6,7 (only using 2 ultrasonic for now)
 const int trig_six = 4;
 const int echo_six = 15;
-const int trig_two = 18;
-const int echo_two = 19;
+const int trig_two = 19;
+const int echo_two = 18;
 const int max_dist = 100;
 const int laser1 = 12;
 const int laser2 = 13;
@@ -43,7 +43,9 @@ NewPing sonar2(trig_two,echo_two,30);
 void setup() {
   Serial.begin(115200);
   pinMode(trig_six, OUTPUT); 
-  pinMode(echo_six, INPUT);  
+  pinMode(echo_six, INPUT); 
+  pinMode(trig_two, OUTPUT); 
+  pinMode(echo_two, INPUT); 
   pinMode(pushBtn, INPUT);
   pinMode(ledPin, OUTPUT);
   pinMode(laser1, OUTPUT);
@@ -60,9 +62,9 @@ void loop() {
   delay(50);
   int push_btn_state = digitalRead(pushBtn);
   irReading = digitalRead(irSensor);
-  distance6 = sonar6.ping_cm();
+  distance6 = sonar6.ping_cm();//need t ocndition less than 6
   distance2 = sonar2.ping_cm();
-  //Serial.println(distance2);
+  Serial.println(distance2);
 
   if (irReading == LOW){
     Serial.println("Motion Detected, Visitors entered the maze");
@@ -125,6 +127,17 @@ void loop() {
           irdetected = false;
           
         }
+      }
+
+
+      //assume for this case to restart the program
+      if (wall2Activated == true && buttonPressed == true){
+        Serial.println("User successfully finished the mini game");
+        Serial.println("Grid 2 Deactivated");
+        releaseWall2();
+        wall2Activated = false;
+        buttonPressed = false;
+        irdetected = false;
       }
     
     
