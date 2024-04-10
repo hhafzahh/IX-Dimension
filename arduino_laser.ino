@@ -24,6 +24,7 @@ const int trig_two = 19;
 const int echo_two = 18;
 const int max_dist = 100;
 const int laser1 = 12;
+const int laser1_1 = 21;
 const int laser2 = 13;
 const int laser5 = 26;
 const int laser6 = 25;
@@ -56,6 +57,7 @@ void setup() {
   pinMode(laser7, OUTPUT);
   pinMode(laser6_1, OUTPUT);
   pinMode(laser6_2, OUTPUT);
+  pinMode(laser1_1, OUTPUT);
 }
 
 void loop() {
@@ -94,6 +96,7 @@ void loop() {
         if (countdown_over = true){
           Serial.println("It is now safe to close off the wall");
           digitalWrite(laser2,HIGH);
+          digitalWrite(laser1_1,HIGH);
           wall2Activated = true;
           Serial.println("All walls of grid 2 is closed!");
         }  
@@ -130,7 +133,7 @@ void loop() {
       }
 
 
-      //assume for this case to restart the program
+      //assume for this case to restart the program //no countdown
       if (wall2Activated == true && buttonPressed == true){
         Serial.println("User successfully finished the mini game");
         Serial.println("Grid 2 Deactivated");
@@ -195,6 +198,7 @@ void releaseWall6(){
 
 void releaseWall2(){
   digitalWrite(laser2, LOW);
+  digitalWrite(laser1_1,LOW);
   Serial.println("Wall 2 is released");
   wall2Activated = false;
 }
