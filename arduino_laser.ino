@@ -65,9 +65,10 @@ void loop() {
   int push_btn_state = digitalRead(pushBtn);
   irReading = digitalRead(irSensor);
   distance6 = sonar6.ping_cm();//need t ocndition less than 6
-  distance2 = sonar2.ping_cm();
-  Serial.println(distance6);
-
+  //distance2 = sonar2.ping_cm();
+  Serial.println(distance2);
+ 
+  //digitalWrite(laser1,HIGH); //t test aser
   if (irReading == LOW){
     Serial.println("Motion Detected, Visitors entered the maze");
     mazeActivated = true;
@@ -75,7 +76,7 @@ void loop() {
    }
 
    if (mazeActivated == true){
-      if (distance6 > 0 && distance6 < 6 && wall6Activated == false && irdetected == true) {
+      if (distance6 > 0 && distance6 < 4 && wall6Activated == false && irdetected == true) {
         //wall 6 should be open!
         
         Serial.println("Countdown of 10s have started");
