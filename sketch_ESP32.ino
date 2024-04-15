@@ -1,31 +1,22 @@
-/*
-  ESP-NOW Demo - Transmit
-  esp-now-demo-xmit.ino
-  Sends data to Responder
-  
-  DroneBot Workshop 2022
-  https://dronebotworkshop.com
-*/
-
 // Include Libraries
 #include <esp_now.h>
 #include <WiFi.h>
 
-// Variables for test data
-int int_value;
-float float_value;
-bool bool_value = true;
+// Button Pin Definition
+const int buttonPin = 5;  // Button connected to GPIO2 (D4)
 
-// MAC Address of responder - edit as required
-//uint8_t broadcastAddress[] = {0x48, 0xE7, 0x29, 0x96, 0xB0, 0xE4};//mine
-uint8_t broadcastAddress[] = {0x44, 0x17, 0x93, 0x0F, 0xCD, 0x78};//responder
+// Variables for boolean values
+bool button_clicked = false;
+bool entered_boolean_value = true;
+
+// MAC Address of receiver (ESP8266) - edit as required
+uint8_t receiverAddress[] = {0x44, 0x17, 0x93, 0x0F, 0xCD, 0x78};
 
 // Define a data structure
 typedef struct struct_message {
   char a[32];
-  int b;
-  float c;
-  bool d;
+  bool button_clicked;
+  bool entered_boolean_value;
 } struct_message;
 
 // Create a structured object
@@ -48,7 +39,7 @@ void setup() {
   // Set ESP32 as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
 
-  // Initilize ESP-NOW
+  // Initialize ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
@@ -57,8 +48,8 @@ void setup() {
   // Register the send callback
   esp_now_register_send_cb(OnDataSent);
   
-  // Register peer
-  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  // Register peer (ESP8266 receiver)
+  memcpy(peerInfo.peer_addr, receiverAddress, 6);
   peerInfo.channel = 0;  
   peerInfo.encrypt = false;
   
@@ -67,35 +58,37 @@ void setup() {
     Serial.println("Failed to add peer");
     return;
   }
+
+  // Initialize button pin
+  pinMode(buttonPin, INPUT_PULLUP);
 }
 
 void loop() {
 
-  // Create test data
+  // Read button state
+  int buttonState = digitalRead(buttonPin);
 
-  // Generate a random integer
-  int_value = random(1,20);
-
-  // Use integer to make a new float
-  float_value = 1.3 * int_value;
-
-  // Invert the boolean value
-  bool_value = !bool_value;
-  
-  // Format structured data
-  strcpy(myData.a, "Welcome to the Workshop!");
-  myData.b = int_value;
-  myData.c = float_value;
-  myData.d = bool_value;
-  
-  // Send message via ESP-NOW
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
-   
-  if (result == ESP_OK) {
-    Serial.println("Sending confirmed");
+  // If button is clicked
+  if (buttonState == LOW && !button_clicked) {
+    button_clicked = true;
+    
+    // Format structured data
+    strcpy(myData.a, "Button Clicked");
+    myData.button_clicked = button_clicked;
+    myData.entered_boolean_value = entered_boolean_value;
+    
+    // Send message via ESP-NOW
+    esp_err_t result = esp_now_send(receiverAddress, (uint8_t *) &myData, sizeof(myData));
+     
+    if (result == ESP_OK) {
+      Serial.println("Sending confirmed");
+    }
+    else {
+      Serial.println("Sending error");
+    }
+  } else if (buttonState == HIGH && button_clicked) {
+    button_clicked = false;
   }
-  else {
-    Serial.println("Sending error");
-  }
-  delay(2000);
+  
+  delay(200); // Debounce delay
 }
