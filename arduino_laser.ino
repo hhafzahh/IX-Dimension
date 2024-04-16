@@ -22,10 +22,10 @@ const int trig_six = 4;
 const int echo_six = 15;
 const int trig_two = 19;
 const int echo_two = 18;
-const int max_dist = 100;
-const int laser1 = 12;
-const int laser1_1 = 21;
-const int laser2 = 13;
+const int max_dist = 10;
+const int laser1 = 13;
+const int laser1_1 = 12;
+const int laser2 = 2;
 const int laser5 = 26;
 const int laser6 = 25;
 const int laser6_1 = 33;
@@ -65,8 +65,8 @@ void loop() {
   int push_btn_state = digitalRead(pushBtn);
   irReading = digitalRead(irSensor);
   distance6 = sonar6.ping_cm();//need t ocndition less than 6
-  //distance2 = sonar2.ping_cm();
-  Serial.println(distance2);
+  distance2 = sonar2.ping_cm();
+  Serial.println(irReading);
  
   //digitalWrite(laser1,HIGH); //t test aser
   if (irReading == LOW){
@@ -90,7 +90,7 @@ void loop() {
         
       }
 
-      if (distance2 > 0 && distance2 < 10 && wall2Activated == false && irdetected == true){
+      if (distance2 > 0 && distance2 < 5 && wall2Activated == false && irdetected == true){
         //wall2 should be open!
         Serial.println("Countdown of 10s have started");
         startCountdown();
