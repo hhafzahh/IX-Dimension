@@ -11,7 +11,7 @@ bool wall2Activated = false;
 bool wall6Activated = false;
 bool wall7Activated = false;
 bool wall5Activated = false;
-bool wall1Activated = false;//not sure if need 
+bool wall1Activated = false; 
 bool countdown_over = false;
 bool irdetected = false;
 
@@ -24,7 +24,7 @@ const int trig_two = 19;
 const int echo_two = 18;
 const int max_dist = 10;
 const int laser1 = 13;
-const int laser1_1 = 12;
+const int laser1_1 = 23;
 const int laser2 = 2;
 const int laser5 = 26;
 const int laser6 = 25;
@@ -34,11 +34,10 @@ const int laser7 = 27;
 const int irSensor = 14;
 const int pushBtn = 5;
 const int ledPin = 22;
-//lcd display might need 2 pins (21&22 based on reserach)
 
 //declare ultrasonic 
 NewPing sonar6(trig_six,echo_six, max_dist);
-NewPing sonar2(trig_two,echo_two,30);
+NewPing sonar2(trig_two,echo_two,max_dist);
 
 
 void setup() {
@@ -64,11 +63,11 @@ void loop() {
   delay(50);
   int push_btn_state = digitalRead(pushBtn);
   irReading = digitalRead(irSensor);
-  distance6 = sonar6.ping_cm();//need t ocndition less than 6
+  distance6 = sonar6.ping_cm();
   distance2 = sonar2.ping_cm();
-  Serial.println(irReading);
+  //Serial.println(irReading);
  
-  //digitalWrite(laser1,HIGH); //t test aser
+ 
   if (irReading == LOW){
     Serial.println("Motion Detected, Visitors entered the maze");
     mazeActivated = true;
@@ -183,16 +182,19 @@ void trapGrid6(){
 
 void releaseWall5(){
   digitalWrite(laser5,LOW);
+  digitalWrite(laser6_1, LOW);
   Serial.println("Wall 5 is released"); 
 }
 
 void releaseWall7(){
   digitalWrite(laser7,LOW);
+  digitalWrite(laser6_2,LOW);
   Serial.println("Wall 7 is released");  
 }
 
 void releaseWall6(){
-  digitalWrite(laser6_1, LOW);
+  digitalWrite(laser6, LOW);
+  digitalWrite(laser1, LOW);
   Serial.println("Wall 6 is released");
   wall6Activated = false;
 }
