@@ -127,6 +127,7 @@ void loop() {
           //wall6 to be opened to allow new users to enter
           releaseWall6();
           releaseWall2();
+          mazeActivated = false;//new 
           irdetected = false;
           
         }
@@ -140,12 +141,15 @@ void loop() {
         releaseWall2();
         wall2Activated = false;
         buttonPressed = false;
+        mazeActivated = false;//new
         irdetected = false;
       }
     
     
     
     }
+
+    
 
 }
 
@@ -205,3 +209,5 @@ void releaseWall2(){
   Serial.println("Wall 2 is released");
   wall2Activated = false;
 }
+
+
